@@ -55,7 +55,8 @@ def buildFileName(output_dir, net_name, centrality, followGiant, update=True):
 
 def centralityUpdateAttack(graph, data_dir, net_name, 
                            centrality='betweenness', 
-                           followGiant=False, saveData=True):
+                           followGiant=False, saveData=True, 
+                           overwrite=False):
     """ (iGraph.Graph(), str, str, str, bool, bool) -> list 
     
     Performs a node attack based on 'centrality' restricted or not to
@@ -97,6 +98,14 @@ def centralityUpdateAttack(graph, data_dir, net_name,
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
         #print('Creating dir ', output_dir)
+
+    output_file = buildFileName(output_dir, net_name, centrality, followGiant)
+    #print(output_file)
+    if not overwrite:
+        if os.path.isfile(output_file):
+            print('File "' + output_file + '"\talready exist.')
+            return None
+    
     if saveData:
         for data in ['original_indices_values', 'btw_values', 'deg_values',
                      #'components',
@@ -105,8 +114,7 @@ def centralityUpdateAttack(graph, data_dir, net_name,
                 os.mkdir(output_dir + '/' + data)
                 #print('Creating dir ', output_dir + '/' + data)
     
-    output_file = buildFileName(output_dir, net_name, centrality, followGiant)
-    #print(output_file)
+
     
     original_indices_file_base_name = output_dir + '/original_indices_values/oiValues'
     btw_file_base_name = output_dir + '/btw_values/btwValues'
