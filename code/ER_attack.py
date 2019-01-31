@@ -13,6 +13,11 @@ if 'giant' in sys.argv:
 else:
     giant = False
 
+if 'overwrite' in sys.argv:
+    overwrite = True
+else:
+    overwrite = False
+
 dir_name = '../networks/ER'
 
 seeds = range(min_seed, max_seed)
@@ -27,8 +32,8 @@ for seed in seeds:
     G = ig.Graph().Read_Edgelist(full_name, directed=False)        
 
     centralityUpdateAttack(G, net_dir_name, output_name[:-4], centrality='betweenness', 
-                            followGiant=giant, saveData=True)
+                            followGiant=giant, saveData=True, overwrite=overwrite)
     centralityUpdateAttack(G, net_dir_name, output_name[:-4], centrality='random', 
-                            followGiant=giant, saveData=True)
+                            followGiant=giant, saveData=True, overwrite=overwrite)
     centralityUpdateAttack(G, net_dir_name, output_name[:-4], centrality='degree', 
-                            followGiant=giant, saveData=True)
+                            followGiant=giant, saveData=True, overwrite=overwrite)

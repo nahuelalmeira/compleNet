@@ -1,6 +1,7 @@
 import os
 import sys
 import pickle
+import bz2
 import numpy as np
 import igraph as ig
 
@@ -31,10 +32,11 @@ for seed in range(min_seed, max_seed):
     print(network)
     network_file = network + '.txt'
     full_network_path = os.path.join(net_dir_name, network, network_file)
+    G = ig.Graph().Read_Edgelist(full_network_path, directed=False)
+    gcc = G.components(mode='WEAK').giant()
+    Ngcc0 = gcc.vcount()
 
     for attack in attacks:    
-
-        #G = ig.Graph().Read_Edgelist(full_network_path, directed=False)
         
         attack_dir_name = os.path.join(net_dir_name, network, attack)
 
@@ -42,13 +44,47 @@ for seed in range(min_seed, max_seed):
         if not overwrite:
             if os.path.isfile(full_output_name):
                 continue
+        
 
-        full_input_name  = os.path.join(attack_dir_name, 'btw_by_oi_arr.txt')
-        btw_by_oi_arr = np.loadtxt(full_input_name)
+        full_input_name  = os.path.join(attack_dir_name, 'btwMatrix.pickle.bz2')
+        with bz2.BZ2File(full_input_name, 'r') as f:
+            btwMatrix = pickle.load(f)
+        
+        if False:
+            ### Normalize
+            for i, row in enumerate(btwMatrix):
+                n = Ngcc0 - i
+                if n > 2:
+                    btwMatrix[i] = 2*row / ((n-1)*(n-2))
+                else:
+                    btwMatrix[i] = 0.0*row
 
-        delta2_btw = np.diff(btw_by_oi_arr)**2        
+        ## Compute distribution parameters
+        mean_values = np.mean(btwMatrix, axis=1)
+        std_values = np.std(btwMatrix, axis=1)
+
+        output  = os.path.join(attack_dir_name, 'btwDistParameters.txt')
+        np.savetxt(output, np.array([mean_values, std_values]).T)
+
+        ## Compute susceptibility (sqared differences)
+        btwMatrix = btwMatrix.T
+        delta2_btw = np.diff(btwMatrix)**2        
         delta2_btw_sum = np.nansum(delta2_btw, axis=0)
         delta2_btw_sum = np.append(delta2_btw_sum, np.repeat(np.NaN, (N-len(delta2_btw_sum))))
         
         np.savetxt(full_output_name, delta2_btw_sum)
+
+
+
+        #### old code
+
+        #full_input_name  = os.path.join(attack_dir_name, 'btw_by_oi_arr.pickle.bz2')
+        #with bz2.BZ2File(full_input_name, 'r') as f:
+        #    btw_by_oi_arr = pickle.load(f)
+
+        #delta2_btw = np.diff(btw_by_oi_arr)**2        
+        #delta2_btw_sum = np.nansum(delta2_btw, axis=0)
+        #delta2_btw_sum = np.append(delta2_btw_sum, np.repeat(np.NaN, (N-len(delta2_btw_sum))))
+        
+        #np.savetxt(full_output_name, delta2_btw_sum)
         
