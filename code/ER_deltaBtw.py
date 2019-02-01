@@ -63,6 +63,9 @@ for seed in range(min_seed, max_seed):
         mean_values = np.mean(btwMatrix, axis=1)
         std_values = np.std(btwMatrix, axis=1)
 
+        mean_values = np.append(mean_values, np.repeat(np.NaN, (N-len(mean_values))))
+        std_values = np.append(std_values, np.repeat(np.NaN, (N-len(std_values))))
+
         output  = os.path.join(attack_dir_name, 'btwDistParameters.txt')
         np.savetxt(output, np.array([mean_values, std_values]).T)
 

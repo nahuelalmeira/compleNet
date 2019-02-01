@@ -1,6 +1,7 @@
 import os
 import sys
 import pickle
+import bz2
 import numpy as np
 import igraph as ig
 from collections import Counter
@@ -15,7 +16,7 @@ def counterToList(counter):
     lst = []
     for s, ns in counter:
         lst += [s]*ns
-    return lst
+    return sorted(lst, reverse=True)
 
 def normalizedAvgSize(comp_sizes):
     if len(comp_sizes) < 2:
@@ -105,29 +106,30 @@ for seed in seeds:
         binder_values = []
         binder2_values = []
         Ngcc_values = []
+        Nsec_values = []
             
         attack_dir_name = os.path.join(net_dir_name, network, attack)
-        comp_sizes_dir  = os.path.join(attack_dir_name, 'componentSizes')
+        comp_sizes_file  = os.path.join(attack_dir_name, 'componentSizes.pickle.bz2')
+        with bz2.BZ2File(comp_sizes_file, 'r') as f:
+            comp_sizes_values = pickle.load(f)
         
         full_file_name  = os.path.join(attack_dir_name, 'finiteClusters.txt')
         if not overwrite:
             if os.path.isfile(full_file_name):
                 continue
-        
-        comp_sizes_files = sorted(os.listdir(comp_sizes_dir))
-        
-        for comp_sizes_file in comp_sizes_files:
-                
-            full_comp_sizes_file_path = os.path.join(comp_sizes_dir, comp_sizes_file)    
-            comp_sizes = np.loadtxt(full_comp_sizes_file_path, dtype=int)
-            try:
-                Ngcc = comp_sizes[0][0]
-            except:
-                Ngcc = comp_sizes[0]
-            
-            Ngcc_values.append(Ngcc)
 
+        for comp_sizes in comp_sizes_values:
+            
             comp_sizes_lst = counterToList(comp_sizes)
+            Ngcc = comp_sizes_lst[0]
+            if len(comp_sizes_lst) > 1:
+                Nsec = comp_sizes_lst[1]
+            else:
+                Nsec = 0
+
+            Ngcc_values.append(Ngcc)
+            Nsec_values.append(Nsec)
+
             meanS = normalizedAvgSize(comp_sizes_lst)
             meanS2 = avgSize(comp_sizes_lst)
             binder = binderCumulant(comp_sizes_lst)
@@ -138,13 +140,15 @@ for seed in seeds:
             binder_values.append(binder)
             binder2_values.append(binder2)
 
-        Ngcc_values = np.array(Ngcc_values + [1]*(N-len(Ngcc_values)))
+        Ngcc_values = np.array(Ngcc_values + [1]*(N-len(Ngcc_values)), dtype=int)
+        Nsec_values = np.array(Nsec_values + [1]*(N-len(Nsec_values)), dtype=int)
         meanS_values = np.array(meanS_values + [np.NaN]*(N-len(meanS_values)))
         meanS2_values = np.array(meanS2_values + [np.NaN]*(N-len(meanS2_values)))
         binder_values = np.array(binder_values + [np.NaN]*(N-len(binder_values)))
         binder2_values = np.array(binder2_values + [np.NaN]*(N-len(binder2_values)))
 
-        finiteClusterMeassures = np.array([meanS_values, meanS2_values, binder_values, binder2_values])
-        
-        np.savetxt(full_file_name, finiteClusterMeassures)
-        np.savetxt(os.path.join(attack_dir_name, 'Ngcc_values.txt'), Ngcc_values, fmt='%d')
+        header = 'meanS meanS2 binder binder2'
+        finiteClusterMeassures = np.array([meanS_values, meanS2_values, binder_values, binder2_values]).T
+        np.savetxt(full_file_name, finiteClusterMeassures, header=header)
+        np.savetxt(os.path.join(attack_dir_name, 'Ngcc_values.txt'), 
+                   np.array([Ngcc_values, Nsec_values], dtype=int).T, fmt='%d %d', header='Ngcc Nsec')

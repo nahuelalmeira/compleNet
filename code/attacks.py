@@ -194,16 +194,12 @@ def centralityUpdateAttack(graph, data_dir, net_name,
         sizes_arr = np.array(sorted([(s, ns) for s, ns in counter.items()], 
                                     key=lambda x: x[0], reverse=True), dtype=int)        
         sizes_arrs.append(sizes_arr)
-
+        
         ## Remove node
         idx = g.vs()['original_index'].index(original_idx)
         g.vs[idx].delete()     
 
         j += 1
-    
-    ## Write data in binary format
-    #sorted_btw.tofile(btw_file_name)
-    #sorted_deg.tofile(deg_file_name)
 
     ## Save data in .pickle.bz2 files
     with bz2.BZ2File(component_sizes_file_name, 'w') as f:

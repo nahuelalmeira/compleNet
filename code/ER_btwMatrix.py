@@ -1,6 +1,7 @@
 import os
 import sys
 import pickle
+import bz2
 import numpy as np
 import igraph as ig
 
@@ -46,7 +47,10 @@ for seed in seeds:
         oi_dir          = os.path.join(attack_dir_name, 'original_indices_values')
         comp_sizes_dir  = os.path.join(attack_dir_name, 'componentSizes')
         
-        full_file_name  = os.path.join(attack_dir_name, 'btw_by_oi_arr.txt')
+        old_full_file_name  = os.path.join(attack_dir_name, 'btw_by_oi_arr.txt')
+        if os.path.isfile(old_full_file_name):
+            os.remove(old_full_file_name)
+        full_file_name  = os.path.join(attack_dir_name, 'btw_by_oi_arr.pickle.bz2')
         if not overwrite:
             if os.path.isfile(full_file_name):
                 continue
@@ -98,5 +102,7 @@ for seed in seeds:
         Ngcc_values = np.array(Ngcc_values + [1]*(N-len(Ngcc_values)))
         btw_by_oi_arr = np.array(btw_by_oi_list).T
         
-        np.savetxt(full_file_name, btw_by_oi_arr)
+        with bz2.BZ2File(full_file_name, 'w') as f:
+            pickle.dump(btw_by_oi_arr, f)
+        #np.savetxt(full_file_name, btw_by_oi_arr)
         np.savetxt(os.path.join(attack_dir_name, 'Ngcc_values.txt'), Ngcc_values, fmt='%d')
