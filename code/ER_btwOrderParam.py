@@ -37,30 +37,74 @@ for seed in range(min_seed, max_seed):
         
         attack_dir_name = os.path.join(net_dir_name, network, attack)
 
-        full_output_name  = os.path.join(attack_dir_name, 'btwOrderParam.txt')
+        full_output_name = os.path.join(attack_dir_name, 'orderParams.txt')
         if not overwrite:
             if os.path.isfile(full_output_name):
                 continue
 
-        full_input_name  = os.path.join(attack_dir_name, 'btw_by_oi_arr.pickle.bz2')
+        full_input_name  = os.path.join(attack_dir_name, 'btwMatrix.pickle.bz2')
         with bz2.BZ2File(full_input_name, 'r') as f:
-            btw_by_oi_arr = pickle.load(f)
-        #btw_by_oi_arr = np.loadtxt(full_input_name)
+            btw_matrix = pickle.load(f)
 
-        spin_matrix = np.nan_to_num(btw_by_oi_arr, copy=True)
-        np.nan_to_num(btw_by_oi_arr, copy=False)
+        spin_data = []
+       
+        for mode in range(5):
 
-        for i in range(len(spin_matrix)):
-            if spin_matrix[i][0] == 0:
-                spin_matrix[i] = [0.0 for elem in spin_matrix[i]]
-            else:
-                spin_matrix[i] = spin_matrix[i] / spin_matrix[i][0]
+            spin_matrix = np.nan_to_num(btw_matrix, copy=True)
 
-        btw_sum = np.nansum(btw_by_oi_arr, axis=0)
-        spin_sum = np.nansum(spin_matrix, axis=0)
+            if mode == 0:
+                # s_i^t = b_i^t
+                for t, row in enumerate(spin_matrix):
+                    for i, b_i_t in enumerate(row):
+                        spin_matrix[t][i] = b_i_t
 
-        btw_sum = np.append(btw_sum, np.repeat(np.NaN, (N-len(btw_sum))))
-        spin_sum = np.append(spin_sum, np.repeat(np.NaN, (N-len(spin_sum))))
+            if mode == 1:
+                # s_i^t = b_i^t / b_i^0
+                for t, row in enumerate(spin_matrix):
+                    for i, b_i_t in enumerate(row):
+                        b_i_0 = spin_matrix[0][i]
+                        if b_i_0 != 0:
+                            spin_matrix[t][i] = b_i_t / b_i_0
+                        else:
+                            spin_matrix[t][i] = 0.0
 
-        np.savetxt(full_output_name, np.array([btw_sum, spin_sum]).T)
+            if mode == 2:
+                # s_i^t = b_i^{t+1} / b_i^t
+                for t, row in enumerate(spin_matrix):
+                    if t == len(spin_matrix):
+                        spin_matrix[t] = [0.0 for elem in spin_matrix[t]]
+                        break
+                    for i, b_t in enumerate(row):
+                        if b_t != 0:
+                            spin_matrix[t][i] = spin_matrix[t+1][i] / b_t
+
+            if mode == 3:
+                # s_i^t = ln( (b_i^t + 1) / (<b^t> + 1) )
+                for t, row in enumerate(spin_matrix):
+                    mean_b_t = np.mean(row)
+                    for i, b_t in enumerate(row):
+                        spin_matrix[t][i] = np.log((b_t + 1) / (mean_b_t + 1))
+
+            if mode == 4:
+                # s_i^t = tanh(b_i^t / <b^t>)
+                for t, row in enumerate(spin_matrix):
+                    mean_b_t = np.mean(row)
+                    for i, b_t in enumerate(row):
+                        if mean_b_t > 0:
+                            spin_matrix[t][i] = np.tanh(b_t / mean_b_t)
+                        else:
+                            spin_matrix[t][i] = 0
+
+            spin_sum = np.sum(spin_matrix, axis=1)
+            spin_sum = np.append(spin_sum, np.repeat(np.NaN, (N-len(spin_sum))))
+        
+            spin_var = np.var(spin_matrix, axis=1)
+            spin_var = np.append(spin_var, np.repeat(np.NaN, (N-len(spin_var))))
+
+            spin_data.append(spin_sum)
+            spin_data.append(spin_var)
+
+        spin_data = np.array(spin_data)
+        output = spin_data.T
+        np.savetxt(full_output_name, output)
         

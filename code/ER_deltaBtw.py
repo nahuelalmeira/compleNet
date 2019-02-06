@@ -62,12 +62,13 @@ for seed in range(min_seed, max_seed):
         ## Compute distribution parameters
         mean_values = np.mean(btwMatrix, axis=1)
         std_values = np.std(btwMatrix, axis=1)
+        sum_values = np.sum(btwMatrix, axis=1)
 
         mean_values = np.append(mean_values, np.repeat(np.NaN, (N-len(mean_values))))
         std_values = np.append(std_values, np.repeat(np.NaN, (N-len(std_values))))
-
+        sum_values = np.append(sum_values, np.repeat(np.NaN, (N-len(sum_values))))
         output  = os.path.join(attack_dir_name, 'btwDistParameters.txt')
-        np.savetxt(output, np.array([mean_values, std_values]).T)
+        np.savetxt(output, np.array([mean_values, std_values, sum_values]).T)
 
         ## Compute susceptibility (sqared differences)
         btwMatrix = btwMatrix.T
@@ -76,18 +77,4 @@ for seed in range(min_seed, max_seed):
         delta2_btw_sum = np.append(delta2_btw_sum, np.repeat(np.NaN, (N-len(delta2_btw_sum))))
         
         np.savetxt(full_output_name, delta2_btw_sum)
-
-
-
-        #### old code
-
-        #full_input_name  = os.path.join(attack_dir_name, 'btw_by_oi_arr.pickle.bz2')
-        #with bz2.BZ2File(full_input_name, 'r') as f:
-        #    btw_by_oi_arr = pickle.load(f)
-
-        #delta2_btw = np.diff(btw_by_oi_arr)**2        
-        #delta2_btw_sum = np.nansum(delta2_btw, axis=0)
-        #delta2_btw_sum = np.append(delta2_btw_sum, np.repeat(np.NaN, (N-len(delta2_btw_sum))))
-        
-        #np.savetxt(full_output_name, delta2_btw_sum)
         
