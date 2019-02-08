@@ -116,12 +116,7 @@ for seed in range(min_seed, max_seed):
 
             spin_sum = np.sum(spin_matrix, axis=1)
             spin_sum = np.append(spin_sum, np.repeat(np.NaN, (N-len(spin_sum))))
-        
-            #spin_var = np.var(spin_matrix, axis=1)
-            #spin_var = np.append(spin_var, np.repeat(np.NaN, (N-len(spin_var))))
-
             spin_data.append(spin_sum)
-            #spin_data.append(spin_var)
 
         spin_data = np.array(spin_data)
         output = spin_data.T
