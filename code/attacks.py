@@ -214,6 +214,106 @@ def centralityUpdateAttack(graph, data_dir, net_name,
     np.savetxt(output_file, data_to_file, fmt='%d %d %f')
     return original_indices
 
+def centralityUpdateAttackFast(graph, data_dir, net_name, 
+                           centrality='random', 
+                           followGiant=False, saveData=True, 
+                           overwrite=False):
+    
+    if centrality not in ['degree', 'random']:
+        print('ERROR: centrality "', centrality, '" is not supported')
+        return
+    
+    attackPrefix = buildAttackPrefix(centrality, followGiant)
+    
+    ## Create output directories if they don't exist
+    output_dir = data_dir + '/' + attackPrefix
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    output_file = buildFileName(output_dir, net_name, centrality, followGiant)
+    if not overwrite:
+        if os.path.isfile(output_file):
+            print('File "' + output_file + '"\talready exist.')
+            return None
+    
+    component_sizes_file_name = output_dir + '/componentSizes.pickle.bz2'
+
+    ## Create a copy of graph so as not to modify the original
+    g = graph.copy()
+    
+    if not g.is_simple():
+        print('Network "' + net_name + '" will be considered as simple.')
+        g.simplify()
+        
+    if g.is_directed():
+        print('Network "' + net_name + '" will be considered as undirected.')
+        g.to_undirected()
+        
+    if not g.is_connected():
+        print('Only giant component of network "' + net_name + '" will be considered.')
+        components = g.components(mode='weak')
+        g = components.giant()
+        
+    ## Save original index as a vertex property
+    N0 = g.vcount()
+    n = N0
+    g.vs['original_index'] = range(n)
+    
+    ## List with the node original indices in removal order
+    original_indices = []
+
+    ## Relative sizes of the giant component
+    s_gcc_values = []
+    
+    sizes_arrs = []
+
+    j = 0
+    while True:
+        
+        n = g.vcount()
+        
+        ## Compute components
+        components = g.components(mode='weak')
+        gcc = components.giant()
+        n_gcc = gcc.vcount()
+
+        if n_gcc < 2:
+            break
+
+        ## Identify node to be removed
+        if centrality == 'degree':
+            deg_values = gcc.degree()                
+            idx = max(enumerate(deg_values), key=lambda x: x[1])[0]
+        elif centrality == 'random':
+            idx = np.random.randint(n) 
+
+        ## Add index to list
+        original_idx = g.vs[idx]['original_index']
+        original_indices.append(original_idx)
+
+        ## Add relative size of giant component to list
+        s_gcc_values.append(n_gcc/N0)
+        
+        comp_sizes = [len(c) for c in components]
+        counter = Counter(comp_sizes)
+        sizes_arr = np.array(sorted([(s, ns) for s, ns in counter.items()], 
+                                    key=lambda x: x[0], reverse=True), dtype=int)        
+        sizes_arrs.append(sizes_arr)
+        
+        ## Remove node
+        idx = g.vs()['original_index'].index(original_idx)
+        g.vs[idx].delete()     
+
+        j += 1
+
+    ## Save data in .pickle.bz2 files
+    with bz2.BZ2File(component_sizes_file_name, 'w') as f:
+        pickle.dump(sizes_arrs, f)
+
+    steps = len(original_indices)
+    data_to_file = list(zip(range(steps), original_indices, s_gcc_values))
+    np.savetxt(output_file, data_to_file, fmt='%d %d %f')
+    return original_indices
 
 def OldcentralityUpdateAttack(graph, data_dir, net_name, 
                            centrality='betweenness', 

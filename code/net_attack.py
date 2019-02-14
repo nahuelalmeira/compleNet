@@ -2,7 +2,7 @@ import igraph as ig
 import os
 import sys
 
-from attacks import centralityUpdateAttack, centralityUpdateAttack
+from attacks import centralityUpdateAttack, centralityUpdateAttackFast
 
 net_type = sys.argv[1]
 size = int(sys.argv[2])

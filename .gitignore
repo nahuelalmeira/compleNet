@@ -1,3 +1,13 @@
+# This project
+networks/*/*/BtwU
+networks/*/*/DegU
+networks/*/*/Ran
+code/old
+*.zip
+.vscode
+figs
+*.pickle
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
