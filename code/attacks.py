@@ -282,10 +282,14 @@ def centralityUpdateAttackFast(graph, data_dir, net_name,
 
         ## Identify node to be removed
         if centrality == 'degree':
-            deg_values = gcc.degree()                
-            idx = max(enumerate(deg_values), key=lambda x: x[1])[0]
+            deg_values = g.degree()                
+            #idx = max(enumerate(deg_values), key=lambda x: x[1])[0]
+            idx = np.argmax(deg_values)
         elif centrality == 'random':
             idx = np.random.randint(n) 
+        else:
+            print('ERROR')
+            return None
 
         ## Add index to list
         original_idx = g.vs[idx]['original_index']

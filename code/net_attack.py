@@ -53,8 +53,8 @@ for seed in seeds:
     G = ig.Graph().Read_Edgelist(full_name, directed=False)        
 
     if fast:
-        centralityUpdateAttackFast(G, net_dir_name, output_name[:-4], centrality='random', 
-                                followGiant=giant, saveData=True, overwrite=overwrite)
+        #centralityUpdateAttackFast(G, net_dir_name, output_name[:-4], centrality='random', 
+        #                        followGiant=giant, saveData=True, overwrite=overwrite)
         centralityUpdateAttackFast(G, net_dir_name, output_name[:-4], centrality='degree', 
                                 followGiant=giant, saveData=True, overwrite=overwrite)
     else:
