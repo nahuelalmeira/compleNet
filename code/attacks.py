@@ -319,6 +319,72 @@ def centralityUpdateAttackFast(graph, data_dir, net_name,
     np.savetxt(output_file, data_to_file, fmt='%d %d %f')
     return original_indices
 
+
+def betweennessUpdateAttack(graph, data_dir, net_name, overwrite=False):
+        
+    ## Create output directories if they don't exist
+    output_dir = os.path.join(data_dir, 'BtwU') 
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    output = "oi_list_" + net_name + ".txt"
+    output_file = os.path.join(output_dir, output)
+    if not overwrite:
+        if os.path.isfile(output_file):
+            print('File "' + output_file + '"\talready exist.')
+            return None
+
+    ## Create a copy of graph so as not to modify the original
+    g = graph.copy()
+    
+    if not g.is_simple():
+        print('Network "' + net_name + '" will be considered as simple.')
+        g.simplify()
+        
+    if g.is_directed():
+        print('Network "' + net_name + '" will be considered as undirected.')
+        g.to_undirected()
+        
+    if not g.is_connected():
+        print('Only giant component of network "' + net_name + '" will be considered.')
+        components = g.components(mode='weak')
+        g = components.giant()
+        
+    ## Save original index as a vertex property
+    N0 = g.vcount()
+    n = N0
+    g.vs['original_index'] = range(n)
+    
+    ## List with the node original indices in removal order
+    original_indices = []
+
+    j = 0
+    
+    with open(output_file, 'w') as f:
+    
+        while j < N0:
+
+            ## Compute betweenness
+            btw_values = g.betweenness(directed=False, nobigint=False)
+
+            ## Identify node to be removed
+            idx = max(enumerate(btw_values), key=lambda x: x[1])[0]
+
+            ## Add index to list
+            original_idx = g.vs[idx]['original_index']
+            original_indices.append(original_idx)
+
+            ## Remove node
+            idx = g.vs()['original_index'].index(original_idx)
+            g.vs[idx].delete()     
+
+            j += 1
+            
+            f.write('{}\n'.format(original_idx))
+            f.flush()
+
+    return original_indices
+
 def OldcentralityUpdateAttack(graph, data_dir, net_name, 
                            centrality='betweenness', 
                            followGiant=False, saveData=True, 
