@@ -1,9 +1,6 @@
 # This project
-networks/*/*/BtwU
-networks/*/*/DegU
-networks/*/*/Ran
+networks/*
 code/old
-*.zip
 .vscode
 figs
 *.pickle
