@@ -37,7 +37,7 @@ elif net_type == 'Lattice':
 for seed in seeds:
    
     output_name = base_net_name + '_{:05d}.txt'.format(seed) 
-    net_dir_name = os.path.join(dir_name, output_name[:-4])
+    net_dir_name = os.path.join(dir_name, base_net_name, output_name[:-4])
     pathlib.Path(net_dir_name).mkdir(parents=True, exist_ok=True)
     full_name = os.path.join(net_dir_name, output_name)
 

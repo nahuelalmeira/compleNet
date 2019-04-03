@@ -47,7 +47,7 @@ for seed in seeds:
     output_name = base_output_name + '_{:05d}.txt'.format(seed)
 
     print(output_name)
-    net_dir_name = os.path.join(dir_name, output_name[:-4])
+    net_dir_name = os.path.join(dir_name, base_output_name, output_name[:-4])
     full_name = os.path.join(net_dir_name, output_name)
 
     G = ig.Graph().Read_Edgelist(full_name, directed=False)        
