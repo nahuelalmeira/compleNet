@@ -2,14 +2,12 @@ import igraph as ig
 import numpy as np
 import os
 import sys
-from collections import Counter
 
 net_type = sys.argv[1]
 size = int(sys.argv[2])
 param = sys.argv[3]
 min_seed = int(sys.argv[4])
 max_seed = int(sys.argv[5])
-attack = sys.argv[6]
 
 if 'overwrite' in sys.argv:
     overwrite = True
@@ -30,6 +28,7 @@ elif net_type == 'BA':
     base_net_name = 'BA_N{}_m{}'.format(N, m)
 elif net_type == 'Lattice':
     L = size
+    N = L*L
     p = param
     base_net_name = 'Lattice_L{}_f{}'.format(L, p)
 
@@ -43,7 +42,7 @@ for seed in seeds:
     input_name = net_name + '.txt'   
     full_input_name = os.path.join(net_dir_name, input_name)
 
-    data_dir = os.path.join(net_dir_name, attack)
+    data_dir = os.path.join(net_dir_name, 'BtwU')
 
     oi_file = os.path.join(data_dir, 'oi_list_' + net_name + '.txt')
     if not os.path.isfile(oi_file):
@@ -51,10 +50,7 @@ for seed in seeds:
             print("FILE " + oi_file + " NOT FOUND")
         continue
 
-    components_file = os.path.join(data_dir, 'comp_data_' + net_name + '.txt')
-    if not overwrite:
-        if os.path.isfile(components_file):
-            continue
+    output_base_file = os.path.join(data_dir, 'deg_data_' + net_name)
 
     g = ig.Graph().Read_Edgelist(full_input_name, directed=False)        
 
@@ -74,33 +70,38 @@ for seed in seeds:
     N0 = g.vcount()
     g.vs['original_index'] = range(N0)
 
-    data = []
-
+    ## Original indices in removal order
     oi_values = np.loadtxt(oi_file)
-    for oi in oi_values:
+
+    ## Sample values for the fraction of nodes removed
+    t_values = [0, 0.05, 0.1, 0.15, 0.2, 0.21, 0.215, 0.22, 0.225, 0.23]
+
+    sample_i_values = [int(t*N0) for t in t_values]
+    current_t = t_values[0]
+
+    for i, oi in enumerate(oi_values):
         
+        ## Compute giant component
         components = g.components(mode='WEAK')
-        Ngcc = components.giant().vcount()
-        comp_sizes = [len(c) for c in components]
-        comp_sizes.remove(Ngcc)
-        counter = Counter(comp_sizes)
+        giant = components.giant()
+        Ngcc = giant.vcount()
 
-        if comp_sizes:
-            Nsec = np.max(comp_sizes)
-            meanS = np.mean(comp_sizes)
-            numerator = denominator = 0
-            for size, n in counter.items():
-                numerator += n*size*size
-                denominator += n*size
-            meanS2 = numerator / denominator
-        else:
-            Nsec = 0
-            meanS = np.NaN
-            meanS2 = np.NaN
+        ## Compute node degree
+        degree = giant.degree()
 
-        data.append([Ngcc, Nsec, meanS, meanS2])
+        ## Save data
+        if i in sample_i_values:
+            l = sample_i_values.index(i)
+            t = t_values[l]
+            #print(t)
+            output_file = output_base_file + '_t{:.6f}.txt'.format(t)
+            if not overwrite:
+                if os.path.isfile(output_file):
+                    break
+            np.savetxt(output_file, degree)
 
+        ## Remove node
         idx = g.vs['original_index'].index(oi)
         g.vs[idx].delete()
     
-    np.savetxt(components_file, data, fmt='%d %d %f %f')
+    

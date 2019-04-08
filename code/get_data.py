@@ -3,13 +3,13 @@ import numpy as np
 import os
 import sys
 from collections import Counter
+from attacks import betweennessUpdateAttack
 
 net_type = sys.argv[1]
 size = int(sys.argv[2])
 param = sys.argv[3]
 min_seed = int(sys.argv[4])
 max_seed = int(sys.argv[5])
-attack = sys.argv[6]
 
 if 'overwrite' in sys.argv:
     overwrite = True
@@ -43,7 +43,7 @@ for seed in seeds:
     input_name = net_name + '.txt'   
     full_input_name = os.path.join(net_dir_name, input_name)
 
-    data_dir = os.path.join(net_dir_name, attack)
+    data_dir = os.path.join(net_dir_name, 'BtwU')
 
     oi_file = os.path.join(data_dir, 'oi_list_' + net_name + '.txt')
     if not os.path.isfile(oi_file):
@@ -51,9 +51,9 @@ for seed in seeds:
             print("FILE " + oi_file + " NOT FOUND")
         continue
 
-    components_file = os.path.join(data_dir, 'comp_data_' + net_name + '.txt')
+    data_file = os.path.join(data_dir, 'general_data_' + net_name + '.txt')
     if not overwrite:
-        if os.path.isfile(components_file):
+        if os.path.isfile(data_file):
             continue
 
     g = ig.Graph().Read_Edgelist(full_input_name, directed=False)        
@@ -80,27 +80,20 @@ for seed in seeds:
     for oi in oi_values:
         
         components = g.components(mode='WEAK')
-        Ngcc = components.giant().vcount()
-        comp_sizes = [len(c) for c in components]
-        comp_sizes.remove(Ngcc)
-        counter = Counter(comp_sizes)
+        giant = components.giant()
+        Ngcc = giant.vcount()
+        Mgcc = giant.ecount()
 
-        if comp_sizes:
-            Nsec = np.max(comp_sizes)
-            meanS = np.mean(comp_sizes)
-            numerator = denominator = 0
-            for size, n in counter.items():
-                numerator += n*size*size
-                denominator += n*size
-            meanS2 = numerator / denominator
-        else:
-            Nsec = 0
-            meanS = np.NaN
-            meanS2 = np.NaN
-
-        data.append([Ngcc, Nsec, meanS, meanS2])
+        C = giant.transitivity_undirected(mode='zero')
+        Cws = giant.transitivity_avglocal_undirected(mode='zero')
+        r = giant.assortativity(directed=False)
+        meanl = giant.average_path_length(directed=False)
+        meank = 2*Mgcc/Ngcc
+        comm = giant.community_multilevel()
+        q = comm.q
+        data.append([meank, C, Cws, r, meanl, q])
 
         idx = g.vs['original_index'].index(oi)
         g.vs[idx].delete()
     
-    np.savetxt(components_file, data, fmt='%d %d %f %f')
+    np.savetxt(data_file, data, fmt='%d %d %f %f')

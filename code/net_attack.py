@@ -2,7 +2,7 @@ import igraph as ig
 import os
 import sys
 
-from attacks import centralityUpdateAttack, centralityUpdateAttackFast
+from attacks import updateAttack
 
 net_type = sys.argv[1]
 size = int(sys.argv[2])
@@ -10,20 +10,30 @@ param = sys.argv[3]
 min_seed = int(sys.argv[4])
 max_seed = int(sys.argv[5])
 
-if 'giant' in sys.argv:
-    giant = True
-else:
-    giant = False
-
 if 'overwrite' in sys.argv:
     overwrite = True
 else:
     overwrite = False
 
-if 'fast' in sys.argv:
-    fast = True
+if 'ignore_existing' in sys.argv:
+    ignore_existing = True
 else:
-    fast = False
+    ignore_existing = False 
+
+if 'BtwU' in sys.argv:
+    BtwU = True
+else:
+    BtwU = False
+
+if 'DegU' in sys.argv:
+    DegU = True
+else:
+    DegU = False
+
+if 'Ran' in sys.argv:
+    Ran = True
+else:
+    Ran = False
 
 dir_name = os.path.join('../networks', net_type)
 
@@ -52,15 +62,16 @@ for seed in seeds:
 
     G = ig.Graph().Read_Edgelist(full_name, directed=False)        
 
-    if fast:
-        #centralityUpdateAttackFast(G, net_dir_name, output_name[:-4], centrality='random', 
-        #                        followGiant=giant, saveData=True, overwrite=overwrite)
-        centralityUpdateAttackFast(G, net_dir_name, output_name[:-4], centrality='degree', 
-                                followGiant=giant, saveData=True, overwrite=overwrite)
-    else:
-        centralityUpdateAttack(G, net_dir_name, output_name[:-4], centrality='betweenness', 
-                                followGiant=giant, saveData=True, overwrite=overwrite)
-        centralityUpdateAttack(G, net_dir_name, output_name[:-4], centrality='random', 
-                                followGiant=giant, saveData=True, overwrite=overwrite)
-        centralityUpdateAttack(G, net_dir_name, output_name[:-4], centrality='degree', 
-                                followGiant=giant, saveData=True, overwrite=overwrite)
+    if DegU:
+        updateAttack(G, net_dir_name, output_name[:-4], centrality='degree', 
+                     overwrite=overwrite, ignore_existing=ignore_existing)
+
+    if BtwU:
+        updateAttack(G, net_dir_name, output_name[:-4], centrality='betweenness', 
+                     overwrite=overwrite, ignore_existing=ignore_existing)
+
+    if Ran:
+        updateAttack(G, net_dir_name, output_name[:-4], centrality='random', 
+                     overwrite=overwrite, ignore_existing=ignore_existing)
+
+

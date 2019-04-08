@@ -320,7 +320,7 @@ def centralityUpdateAttackFast(graph, data_dir, net_name,
     return original_indices
 
 
-def betweennessUpdateAttack(graph, data_dir, net_name, overwrite=False):
+def betweennessUpdateAttack(graph, data_dir, net_name, overwrite=False, ignore_existing=True):
         
     ## Create output directories if they don't exist
     output_dir = os.path.join(data_dir, 'BtwU') 
@@ -329,10 +329,10 @@ def betweennessUpdateAttack(graph, data_dir, net_name, overwrite=False):
 
     output = "oi_list_" + net_name + ".txt"
     output_file = os.path.join(output_dir, output)
-    if not overwrite:
+    if overwrite:
         if os.path.isfile(output_file):
-            print('File "' + output_file + '"\talready exist.')
-            return None
+            print('Removing file "' + output_file)
+            os.remove(output_file)
 
     ## Create a copy of graph so as not to modify the original
     g = graph.copy()
@@ -348,8 +348,8 @@ def betweennessUpdateAttack(graph, data_dir, net_name, overwrite=False):
     if not g.is_connected():
         print('Only giant component of network "' + net_name + '" will be considered.')
         components = g.components(mode='weak')
-        g = components.giant()
-        
+        g = components.giant()             
+
     ## Save original index as a vertex property
     N0 = g.vcount()
     n = N0
@@ -359,8 +359,20 @@ def betweennessUpdateAttack(graph, data_dir, net_name, overwrite=False):
     original_indices = []
 
     j = 0
+
+    if os.path.isfile(output_file):   
+        if ignore_existing:
+            print('Ignoring file "' + output_file)
+            return None
+        else:
+            oi_values = np.loadtxt(output_file)
+            for oi in oi_values:
+                idx = g.vs['original_index'].index(oi)
+                g.vs[idx].delete()
+                original_indices.append(oi)
+                j += 1
     
-    with open(output_file, 'w') as f:
+    with open(output_file, 'a+') as f:
     
         while j < N0:
 
@@ -370,6 +382,96 @@ def betweennessUpdateAttack(graph, data_dir, net_name, overwrite=False):
             ## Identify node to be removed
             idx = max(enumerate(btw_values), key=lambda x: x[1])[0]
 
+            ## Add index to list
+            original_idx = g.vs[idx]['original_index']
+            original_indices.append(original_idx)
+
+            ## Remove node
+            idx = g.vs()['original_index'].index(original_idx)
+            g.vs[idx].delete()     
+
+            j += 1
+            
+            f.write('{}\n'.format(original_idx))
+            f.flush()
+
+    return original_indices
+
+def updateAttack(graph, data_dir, net_name, centrality='degree', overwrite=False, ignore_existing=True):
+        
+    ## Create output directories if they don't exist
+    if centrality == 'betweenness':
+        output_dir = os.path.join(data_dir, 'BtwU')
+    elif centrality == 'degree':
+        output_dir = os.path.join(data_dir, 'DegU')
+    elif centrality == 'random':
+        import random
+        output_dir = os.path.join(data_dir, 'Ran')
+    else:
+        print('ERROR: Centrality not supported')
+        return None
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    output = "oi_list_" + net_name + ".txt"
+    output_file = os.path.join(output_dir, output)
+    if overwrite:
+        if os.path.isfile(output_file):
+            print('Removing file "' + output_file)
+            os.remove(output_file)
+
+    ## Create a copy of graph so as not to modify the original
+    g = graph.copy()
+    
+    if not g.is_simple():
+        print('Network "' + net_name + '" will be considered as simple.')
+        g.simplify()
+        
+    if g.is_directed():
+        print('Network "' + net_name + '" will be considered as undirected.')
+        g.to_undirected()
+        
+    if not g.is_connected():
+        print('Only giant component of network "' + net_name + '" will be considered.')
+        components = g.components(mode='weak')
+        g = components.giant()             
+
+    ## Save original index as a vertex property
+    N0 = g.vcount()
+    n = N0
+    g.vs['original_index'] = range(n)
+    
+    ## List with the node original indices in removal order
+    original_indices = []
+
+    j = 0
+
+    if os.path.isfile(output_file):   
+        if ignore_existing:
+            print('Ignoring file "' + output_file)
+            return None
+        else:
+            oi_values = np.loadtxt(output_file)
+            for oi in oi_values:
+                idx = g.vs['original_index'].index(oi)
+                g.vs[idx].delete()
+                original_indices.append(oi)
+                j += 1
+    
+    with open(output_file, 'a+') as f:
+    
+        while j < N0:
+
+            ## Identify node to be removed
+            if centrality == 'betweenness':
+                c_values = g.betweenness(directed=False, nobigint=False)
+                idx = max(enumerate(c_values), key=lambda x: x[1])[0]
+            elif centrality == 'degree':
+                c_values = g.degree()
+                idx = max(enumerate(c_values), key=lambda x: x[1])[0]
+            elif centrality == 'random':
+                idx = int(random.random()*(N0-j))
+            
             ## Add index to list
             original_idx = g.vs[idx]['original_index']
             original_indices.append(original_idx)
