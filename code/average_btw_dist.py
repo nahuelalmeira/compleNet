@@ -34,8 +34,10 @@ elif net_type == 'Lattice':
     p = param
     base_net_name = 'Lattice_L{}_f{}'.format(L, p)
 
+
 ## Sample values for the fraction of nodes removed
-t_values = [0, 0.05, 0.1, 0.15, 0.2, 0.21, 0.215, 0.22, 0.225, 0.23]
+t_values = [0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.21, 0.215, 0.22, 0.225, 0.23,
+                0.24, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
 
 for t in t_values:
     print(t)
@@ -52,17 +54,20 @@ for t in t_values:
         for seed in seeds:
 
             net_name = base_net_name + '_{:05d}'.format(seed)
-            
-        
+
             net_dir_name = os.path.join(base_net_dir_name, net_name)
             data_dir = os.path.join(net_dir_name, 'BtwU')
-            btw_base_file = os.path.join(data_dir, 'btw_data_' + net_name)
 
+            btw_base_file = os.path.join(data_dir, 'btw_data_' + net_name)
             btw_file = btw_base_file + '_t{:.6f}.txt'.format(t)
+            if not os.path.isfile(btw_file):
+                continue
+            
             betweenness = np.loadtxt(btw_file, dtype=float)
-            N = len(betweenness)
-            print(net_name, N)
-            norm_betweenness = 2 * betweenness / ( (N-1) * (N-2) )
+            Ngcc = len(betweenness)
+
+            print(net_name, Ngcc)
+            norm_betweenness = 2 * betweenness / ( (Ngcc-1) * (Ngcc-2) )
             #norm_betweenness_values = np.concatenate((norm_betweenness_values, norm_betweenness))
             for norm_btw_value in norm_betweenness:
                 f.write('{}\n'.format(norm_btw_value))# + '\n')

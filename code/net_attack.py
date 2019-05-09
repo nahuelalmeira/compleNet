@@ -2,7 +2,7 @@ import igraph as ig
 import os
 import sys
 
-from attacks import updateAttack
+from attacks import updateAttack, nonUpdateAttack
 
 net_type = sys.argv[1]
 size = int(sys.argv[2])
@@ -29,6 +29,16 @@ if 'DegU' in sys.argv:
     DegU = True
 else:
     DegU = False
+
+if 'Btw' in sys.argv:
+    Btw = True
+else:
+    Btw = False
+
+if 'Deg' in sys.argv:
+    Deg = True
+else:
+    Deg = False
 
 if 'Ran' in sys.argv:
     Ran = True
@@ -74,4 +84,11 @@ for seed in seeds:
         updateAttack(G, net_dir_name, output_name[:-4], centrality='random', 
                      overwrite=overwrite, ignore_existing=ignore_existing)
 
+    if Deg:
+        nonUpdateAttack(G, net_dir_name, output_name[:-4], centrality='degree', 
+                        overwrite=overwrite, ignore_existing=ignore_existing)
+
+    if Btw:
+        nonUpdateAttack(G, net_dir_name, output_name[:-4], centrality='betweenness', 
+                        overwrite=overwrite, ignore_existing=ignore_existing)
 

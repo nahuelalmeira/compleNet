@@ -74,30 +74,34 @@ for seed in seeds:
     oi_values = np.loadtxt(oi_file)
 
     ## Sample values for the fraction of nodes removed
-    t_values = [0, 0.05, 0.1, 0.15, 0.2, 0.21, 0.215, 0.22, 0.225, 0.23]
+    t_values = [0, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.21, 0.215, 
+                0.22, 0.221, 0.222, 0.223, 0.224, 0.225, 0.226, 0.227, 0.23,
+                0.24, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
 
-    sample_i_values = [int(t*N0) for t in t_values]
+    sample_i_values = [int(t*N) for t in t_values]
     current_t = t_values[0]
 
     for i, oi in enumerate(oi_values):
         
-        ## Compute giant component
-        components = g.components(mode='WEAK')
-        giant = components.giant()
-        Ngcc = giant.vcount()
-
-        ## Compute node betweenness
-        betweenness = giant.betweenness()
-
         ## Save data
         if i in sample_i_values:
+
             l = sample_i_values.index(i)
             t = t_values[l]
-            #print(t)
+            print(t)
+
             btw_file = btw_base_file + '_t{:.6f}.txt'.format(t)
             if not overwrite:
                 if os.path.isfile(btw_file):
-                    break
+                    continue
+
+            ## Compute giant component
+            components = g.components(mode='WEAK')
+            giant = components.giant()
+            Ngcc = giant.vcount()
+            ## Compute node betweenness
+            betweenness = giant.betweenness()
+            
             np.savetxt(btw_file, betweenness)
 
         ## Remove node

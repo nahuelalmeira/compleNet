@@ -33,15 +33,18 @@ elif net_type == 'Lattice':
     base_net_name = 'Lattice_L{}_f{}'.format(L, p)
 
 base_net_dir_name = os.path.join(dir_name, base_net_name)
-seed_file = os.path.join(base_net_dir_name, 'comp_sizes_f{}_seeds.txt'.format(str_f))
+seed_file = os.path.join(base_net_dir_name, 'comp_sizes_{}_f{}_seeds.txt'.format(attack, str_f))
 if os.path.isfile(seed_file):
     if overwrite:
         os.remove(seed_file)
-    past_seeds = np.loadtxt(seed_file, dtype=int)
+        past_seeds = []
+    else:
+        print('Passt seeds will be considered')
+        past_seeds = np.loadtxt(seed_file, dtype=int)
 else:
     past_seeds = np.array([])
 
-components_file = os.path.join(base_net_dir_name, 'comp_sizes_f{}.txt'.format(str_f))
+components_file = os.path.join(base_net_dir_name, 'comp_sizes_{}_f{}.txt'.format(attack, str_f))
 if os.path.isfile(components_file):
     if overwrite:
         os.remove(components_file)

@@ -10,6 +10,7 @@ size = int(sys.argv[2])
 param = sys.argv[3]
 min_seed = int(sys.argv[4])
 max_seed = int(sys.argv[5])
+attack = sys.argv[6]
 
 if 'overwrite' in sys.argv:
     overwrite = True
@@ -43,7 +44,7 @@ for seed in seeds:
     input_name = net_name + '.txt'   
     full_input_name = os.path.join(net_dir_name, input_name)
 
-    data_dir = os.path.join(net_dir_name, 'BtwU')
+    data_dir = os.path.join(net_dir_name, attack)
 
     oi_file = os.path.join(data_dir, 'oi_list_' + net_name + '.txt')
     if not os.path.isfile(oi_file):
@@ -86,7 +87,7 @@ for seed in seeds:
 
         C = giant.transitivity_undirected(mode='zero')
         Cws = giant.transitivity_avglocal_undirected(mode='zero')
-        r = giant.assortativity(directed=False)
+        r = giant.assortativity_degree(directed=False)
         meanl = giant.average_path_length(directed=False)
         meank = 2*Mgcc/Ngcc
         comm = giant.community_multilevel()
@@ -96,4 +97,4 @@ for seed in seeds:
         idx = g.vs['original_index'].index(oi)
         g.vs[idx].delete()
     
-    np.savetxt(data_file, data, fmt='%d %d %f %f')
+    np.savetxt(data_file, data, fmt='%f %f %f %f %f %f')

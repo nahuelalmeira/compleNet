@@ -487,6 +487,59 @@ def updateAttack(graph, data_dir, net_name, centrality='degree', overwrite=False
 
     return original_indices
 
+def nonUpdateAttack(graph, data_dir, net_name, centrality='degree', overwrite=False, ignore_existing=True):
+        
+    ## Create output directories if they don't exist
+    if centrality == 'betweenness':
+        output_dir = os.path.join(data_dir, 'Btw')
+    elif centrality == 'degree':
+        output_dir = os.path.join(data_dir, 'Deg')
+    else:
+        print('ERROR: Centrality not supported')
+        return None
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    output = "oi_list_" + net_name + ".txt"
+    output_file = os.path.join(output_dir, output)
+    if overwrite:
+        if os.path.isfile(output_file):
+            print('Removing file "' + output_file)
+            os.remove(output_file)
+
+    ## Create a copy of graph so as not to modify the original
+    g = graph.copy()
+    
+    if not g.is_simple():
+        print('Network "' + net_name + '" will be considered as simple.')
+        g.simplify()
+        
+    if g.is_directed():
+        print('Network "' + net_name + '" will be considered as undirected.')
+        g.to_undirected()
+        
+    if not g.is_connected():
+        print('Only giant component of network "' + net_name + '" will be considered.')
+        components = g.components(mode='weak')
+        g = components.giant()             
+
+    ## Save original index as a vertex property
+    n = g.vcount()
+    g.vs['original_index'] = range(n)
+
+    ## Compute centrality
+    if centrality == 'betweenness':
+        c_values = g.betweenness(directed=False, nobigint=False)
+    elif centrality == 'degree':
+        c_values = g.degree()
+
+    ## List with the node original indices in removal order
+    original_indices = list(zip(*sorted(zip(g.vs['original_index'], c_values), 
+                           key=lambda x: x[1], reverse=True)))[0]
+
+    np.savetxt(output_file, original_indices)
+    return original_indices
+
 def OldcentralityUpdateAttack(graph, data_dir, net_name, 
                            centrality='betweenness', 
                            followGiant=False, saveData=True, 
