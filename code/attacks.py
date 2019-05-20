@@ -451,7 +451,7 @@ def updateAttack(graph, data_dir, net_name, centrality='degree', overwrite=False
             print('Ignoring file "' + output_file)
             return None
         else:
-            oi_values = np.loadtxt(output_file)
+            oi_values = np.loadtxt(output_file, dtype='int')
             for oi in oi_values:
                 idx = g.vs['original_index'].index(oi)
                 g.vs[idx].delete()
@@ -494,6 +494,8 @@ def nonUpdateAttack(graph, data_dir, net_name, centrality='degree', overwrite=Fa
         output_dir = os.path.join(data_dir, 'Btw')
     elif centrality == 'degree':
         output_dir = os.path.join(data_dir, 'Deg')
+    elif centrality == 'random':
+        output_dir = os.path.join(data_dir, 'Ran')
     else:
         print('ERROR: Centrality not supported')
         return None
@@ -527,17 +529,22 @@ def nonUpdateAttack(graph, data_dir, net_name, centrality='degree', overwrite=Fa
     n = g.vcount()
     g.vs['original_index'] = range(n)
 
-    ## Compute centrality
-    if centrality == 'betweenness':
-        c_values = g.betweenness(directed=False, nobigint=False)
-    elif centrality == 'degree':
-        c_values = g.degree()
+    if centrality == 'random':
+        oi_arr = np.array(range(n))
+        np.random.shuffle(oi_arr)
+        original_indices = oi_arr
+    else:
+        ## Compute centrality
+        if centrality == 'betweenness':
+            c_values = g.betweenness(directed=False, nobigint=False)
+        elif centrality == 'degree':
+            c_values = g.degree()
 
-    ## List with the node original indices in removal order
-    original_indices = list(zip(*sorted(zip(g.vs['original_index'], c_values), 
-                           key=lambda x: x[1], reverse=True)))[0]
+        ## List with the node original indices in removal order
+        original_indices = list(zip(*sorted(zip(g.vs['original_index'], c_values), 
+                            key=lambda x: x[1], reverse=True)))[0]
 
-    np.savetxt(output_file, original_indices)
+    np.savetxt(output_file, original_indices, fmt='%d')
     return original_indices
 
 def OldcentralityUpdateAttack(graph, data_dir, net_name, 

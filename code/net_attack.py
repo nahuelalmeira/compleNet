@@ -81,7 +81,7 @@ for seed in seeds:
                      overwrite=overwrite, ignore_existing=ignore_existing)
 
     if Ran:
-        updateAttack(G, net_dir_name, output_name[:-4], centrality='random', 
+        nonUpdateAttack(G, net_dir_name, output_name[:-4], centrality='random', 
                      overwrite=overwrite, ignore_existing=ignore_existing)
 
     if Deg:

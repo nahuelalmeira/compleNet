@@ -47,7 +47,7 @@ for attack in attacks:
     print(attack)
     
     network_base = 'ER_N{}_p{}'.format(N, p)
-    csv_file_name = os.path.join(dir_name, network_base, '{}.csv'.format(attack))
+    csv_file_name = os.path.join(dir_name, network_base, '{}_cpp.csv'.format(attack))
     if not overwrite:
         if os.path.isfile(csv_file_name):
             continue
@@ -61,17 +61,26 @@ for attack in attacks:
 
     for seed in range(max_seed):
         
+        
         network = network_base + '_{:05d}'.format(seed)
         attack_dir_name = os.path.join(dir_name, network_base, network, attack)
         
-        full_file_name  = os.path.join(attack_dir_name, 'comp_data_' + network + '.txt')
+        #full_file_name  = os.path.join(attack_dir_name, 'comp_data_' + network + '.txt')
+        full_file_name  = os.path.join(attack_dir_name, 'comp_data.txt')
         if not os.path.isfile(full_file_name):
             continue
+        print(seed)
 
         aux = np.loadtxt(full_file_name, dtype=float)
-        _Ngcc_values = np.append(aux[:,0], np.repeat(1, (N-len(aux[:,0]))))
-        _Nsec_values = np.append(aux[:,1], np.repeat(1, (N-len(aux[:,1]))))
-        _meanS2_values = np.append(aux[:,3], np.repeat(1, (N-len(aux[:,3])))) 
+
+        #_Ngcc_values = np.append(aux[:,0], np.repeat(1, (N-len(aux[:,0]))))
+        #_Nsec_values = np.append(aux[:,1], np.repeat(1, (N-len(aux[:,1]))))
+        #_meanS2_values = np.append(aux[:,3], np.repeat(1, (N-len(aux[:,3])))) 
+
+        _Ngcc_values = np.append(aux[:,0][::-1], np.repeat(1, (N-len(aux[:,0]))))
+        _Nsec_values = np.append(aux[:,1][::-1], np.repeat(1, (N-len(aux[:,1]))))
+        _meanS2_values = np.append(aux[:,2][::-1], np.repeat(1, (N-len(aux[:,2]))))
+
         #_meanS_values = np.append(aux[:,2], np.repeat(1, (N-len(aux[:,2])))) 
         #_Sgcc_values = _Ngcc_values / np.arange(N, 0, -1)
     
