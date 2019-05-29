@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
 
     //cout << "Before loadNeighbors" << endl;
     loadNeighbors(network, nn_set, false);
-    //cout << "Before percolate" << endl;
+    //out << "Before percolate" << endl;
     percolate(nn_set, ptr, order, output);
 
     output.close();

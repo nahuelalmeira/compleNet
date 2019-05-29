@@ -508,6 +508,9 @@ def nonUpdateAttack(graph, data_dir, net_name, centrality='degree', overwrite=Fa
         if os.path.isfile(output_file):
             print('Removing file "' + output_file)
             os.remove(output_file)
+    else:
+        if os.path.isfile(output_file):
+            return
 
     ## Create a copy of graph so as not to modify the original
     g = graph.copy()

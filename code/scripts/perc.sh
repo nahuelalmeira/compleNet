@@ -7,15 +7,15 @@ BASE_DIR="../../networks/ER"
 BASE_NET=$1
 BASE_NET_DIR="${BASE_DIR}/${BASE_NET}"
 
-#for SEED in {00000..4999}; do
-for SEED in {10000..19999}; do
+#for SEED in {00000..09999}; do
+for SEED in {05000..09999}; do
 
     NET_NAME="${BASE_NET}_${SEED}"
     NET_DIR="${BASE_NET_DIR}/${NET_NAME}"
     NETWORK="${NET_DIR}/${NET_NAME}_gcc.txt"
 
-    #for ATTACK in "Ran" "Deg" "Btw" "DegU" "BtwU"; do
-    for ATTACK in "Ran"; do
+    #for ATTACK in "Btw" "Deg" "DegU"; do
+    for ATTACK in "BtwU"; do
         ORDER="${NET_DIR}/${ATTACK}/oi_list_${NET_NAME}.txt"
         echo ${ORDER}
         if [ ! -f "${ORDER}" ]; then 
@@ -27,6 +27,7 @@ for SEED in {10000..19999}; do
             echo "File ${OUTPUT} already exist"
             continue
         fi
+
         #echo $NETWORK
         #echo $ORDER
         #echo $OUTPUT
