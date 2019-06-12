@@ -452,11 +452,13 @@ def updateAttack(graph, data_dir, net_name, centrality='degree', overwrite=False
             return None
         else:
             oi_values = np.loadtxt(output_file, dtype='int')
-            for oi in oi_values:
-                idx = g.vs['original_index'].index(oi)
-                g.vs[idx].delete()
-                original_indices.append(oi)
-                j += 1
+            #for oi in oi_values:
+            #    idx = g.vs['original_index'].index(oi)
+            #    g.vs[idx].delete()
+            #    original_indices.append(oi)
+            #    j += 1
+            g.delete_vertices(oi_values)
+            j += len(oi_values)
     
     with open(output_file, 'a+') as f:
     

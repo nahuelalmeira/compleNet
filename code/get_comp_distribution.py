@@ -92,10 +92,12 @@ for seed in seeds:
     g.vs['original_index'] = range(N0)
     
     f = float(str_f)
-    for i in range(int(f*N)):
-        oi = oi_values[i]
-        idx = g.vs['original_index'].index(oi)
-        g.vs[idx].delete()
+    #for i in range(int(f*N)):
+    #    oi = oi_values[i]
+    #    idx = g.vs['original_index'].index(oi)
+    #    g.vs[idx].delete()
+    oi_values = oi_values[:int(f*N)]
+    g.delete_vertices(oi_values)
 
     components = g.components(mode='WEAK')
     Ngcc = components.giant().vcount()
